@@ -88,8 +88,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	player.acceleration.y = 0.5f;//重力
 	float e = 0.7f;//反発係数
 
+	float moveAcceleration = 1;//x軸方向のベクトルが徐々に遅くなる
 
 	int timer = 0;
+
+	float slow = 1;
+	bool jumpF = false;//ジャンプ出来るかどうか　地面についたらtrueになる
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -106,7 +110,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		///                                                            ///
 		/// --------------------↓更新処理ここから-------------------- ///
-		///                                                            ///       
+		///                                                            ///
 
 
 		if (keys[DIK_SPACE])
@@ -239,53 +243,79 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				direction.easeT = 0;
 				easeChange = 1;
 				easePlayerToPoint = 0;
-
+				moveAcceleration = 1;
+				jumpF = false;
 			}
 
 
 		}
 
-		player.velocity.x += player.acceleration.x;//プレイヤーの速度を計算
-		player.pos.x += player.velocity.x;//プレイヤーの位置を変更
-		player.velocity.y += player.acceleration.y;
-		player.pos.y += player.velocity.y;
+		if (keys[DIK_SPACE] && jumpF)
+		{
+			slow = 0.5f;
+		}
+		else
+		{
+			slow = 1;
+		}
+		//player.velocity.x *= moveAcceleration;//プレイヤーの速度を計算
+		player.pos.x += player.velocity.x * moveAcceleration * slow;//プレイヤーの位置を変更
+		player.velocity.y += player.acceleration.y * slow;//プレイヤーの速度を計算
+		player.pos.y += player.velocity.y * slow;//プレイヤーの位置を変更
+		
 
+		//player.velocity.xを徐々に小さくしていく
+		if (moveAcceleration>0)
+		{
+			moveAcceleration -= 0.003f;
+		}
+		else
+		{
+			moveAcceleration = 0;
+
+		}
 
 		//画面外に出ない用と跳ねる度に速度が落ちる。
 		if (player.pos.y > 900 - player.radius.y)
 		{
 			player.pos.y = 900 - player.radius.y;
 			player.velocity.y *= -e;
+			jumpF = true;
 		}
 		if (player.pos.y < 0 + player.radius.y)
 		{
 			player.pos.y = 0 + player.radius.y;
 			player.velocity.y *= -e;
-
+			jumpF = true;
 		}
 		if (player.pos.x < 0 + player.radius.x)
 		{
 			player.pos.x = 0 + player.radius.x;
 			player.velocity.x *= -e;
+			jumpF = true;
 
 		}
 		if (player.pos.x > 1920 - player.radius.x)
 		{
 			player.pos.x = 1920 - player.radius.x;
 			player.velocity.x *= -e;
+			jumpF = true;
+
 		}
 
 
 		timer++;
 		///                                                            ///
 		/// --------------------↑更新処理ここまで-------------------- ///
-		///                                                            ///       
+		///                                                            ///
 
 		///                                                            ///
 		/// --------------------↓描画処理ここから-------------------- ///
 		///                                                            ///
 
 
+		Novice::ScreenPrintf(100, 40, "jumpF=%d", jumpF);
+		Novice::ScreenPrintf(100, 60, "moveAcceleration=%f", moveAcceleration);
 		Novice::ScreenPrintf(100, 80, "player.shot=%d,player.move=%d", player.shot, player.move);
 		Novice::ScreenPrintf(100, 100, "player.velocity.x=%0.2f,player.velocity.y=%0.2f,player.acceleration.x=%0.2f,player.acceleration.y=%0.2f,", player.velocity.x, player.velocity.y, player.acceleration.x, player.acceleration.y);
 		Novice::ScreenPrintf(100, 120, "point.pos.x=%0.1f,point.pos.y=%0.1f,point.easeT=%0.1f", point.pos.x, point.pos.y, point.easeT);
@@ -327,13 +357,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		///                                                            ///
 		/// --------------------↑描画処理ここまで-------------------- ///
-		///                                                            ///       
+		///                                                            ///
 
+
+		///                                                            ///
+		/// ---------------------現在の仕様について--------------------///
+		///                                                            ///       
 
 		//今の仕様は、ショットをするとポイントが射出→ゲージ上のアンカーの動き→スペース離す→アンカーから方向までのベクトルを計算、代入
 		//赤玉が位置についたらまたショット出来る。連打は赤玉の動きがあるから後ろに下がる。単押しだと真後ろに下がるので何かに使えるかも
-		//動いている時にショットすると、離した時にベクトルがリセットする。アンカーに向かう動きで止まっているように見える。
-		//y軸
+		//動いている時にショットすると、離した時にベクトルがリセットする。アンカーに向かう動きで固定してるように見える。
+		//y軸はアンカーに向かう動きをしないので、ベクトルの更新だけされる。
+
+		//x軸の減速とスローモーションを追加
+		//x軸の減速を入れてみると、ステージのネズミ返しが不可能なことに気づいた。重力を0.4f、パワーを400にするとそれっぽくなる
+		//y軸がバウンドして速度が-になっている時にスローを解除するとふっとぶ 解決　accとposのvelどちらもslowをかける
+
+		//どこかにバウンドするともう一度ジャンプ出来るようになる
 
 		// フレームの終了
 		Novice::EndFrame();
