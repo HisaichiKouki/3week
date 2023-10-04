@@ -113,7 +113,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///                                                            ///
 
 
-		if (keys[DIK_SPACE])
+		if (keys[DIK_SPACE]&&jumpF)
 		{
 			if (!player.move)player.shot = true;
 		}
