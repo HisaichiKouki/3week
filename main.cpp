@@ -12,7 +12,7 @@ const char kWindowTitle[] = "3week";
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	Novice::Initialize(kWindowTitle, 1920, 1080);
 
 	struct Vector2
 	{
@@ -27,6 +27,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector2 length;
 		Vector2 movePos;
 		Vector2 velocity;
+		Vector2 acceleration;
 		float easeT;
 		bool move;
 		bool shot;
@@ -40,6 +41,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector2 radius;
 		Vector2 length;
 		Vector2 movePos;
+		Vector2 prepos;
+
 		float easeT;
 	};
 	struct PlayerPoint
@@ -82,6 +85,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	float easePlayerToPoint = 0;
 
+	player.acceleration.y = 0.5f;//重力
+	float e = 0.7f;//反発係数
+
 
 	int timer = 0;
 
@@ -109,19 +115,54 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		else
 		{
-			if (player.shot&&easePlayerToPoint == 100)
+			if (player.shot && easePlayerToPoint == 100)
 			{
 				player.move = true;
 			}
-			if(easePlayerToPoint == 100)player.shot = false;
+			if (easePlayerToPoint == 100)
+			{
+				player.shot = false;
+			}
+
+			if (!player.move&&!player.shot)
+			{
+				point.pos.x = player.pos.x;
+			}
+		}
+
+		player.velocity.x += player.acceleration.x;
+		player.pos.x += player.velocity.x;
+
+		player.velocity.y += player.acceleration.y;
+		player.pos.y += player.velocity.y;
+
+		point.pos.y = player.pos.y;
+		centorPoint.y = player.pos.y;
+		//anchor.pos.y= player.pos.y;
+		//direction.pos.y = direction.prepos.y;
+		anchor.pos.y = player.pos.y;
+
+		if (direction.easeT < 50)
+		{
+			direction.pos.x = anchor.pos.x + constant(1 - direction.easeT / 50) * -shotPower;
+			direction.pos.y = player.pos.y + constant(direction.easeT / 50) * -shotPower;
+
+		}
+		else
+		{
+			direction.pos.x = anchor.pos.x + constant(direction.easeT / 50 - 1) * shotPower;
+			direction.pos.y = player.pos.y + constant(direction.easeT / 50 - 1) * shotPower - shotPower;
 
 		}
 
 		if (player.shot)//プレイヤーからポイントまでアンカーを動かす
 		{
-			point.pos.x = player.pos.x + easeOutExpo(easePlayerToPoint/100) * playerTopoint;
+			point.pos.x = player.pos.x + easeOutExpo(easePlayerToPoint / 100) * playerTopoint;
 
-			if (easePlayerToPoint<100)
+			centorPoint.x = player.pos.x + playerTopoint / 2;
+			anchor.pos.x = player.pos.x + constant(anchor.easeT / 100) * playerTopoint;
+
+			if (easePlayerToPoint < 100)
 			{
 				easePlayerToPoint += 10;
 			}
@@ -130,27 +171,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				easePlayerToPoint = 100;
 			}
 
-				
 
 
-			centorPoint.x = player.pos.x + playerTopoint / 2;
-			centorPoint.y = player.pos.y;
 
-			anchor.pos.x = player.pos.x + constant(anchor.easeT / 100) * playerTopoint;
 
-			if (direction.easeT < 50)
-			{
-				direction.pos.x = constant(1 - direction.easeT / 50) * -shotPower;
-				direction.pos.y = constant(direction.easeT / 50) * -shotPower;
 
-			}
-			else
-			{
-				direction.pos.x = constant(direction.easeT / 50 - 1) * shotPower;
-				direction.pos.y = constant(direction.easeT / 50 - 1) * shotPower - shotPower;
-
-			}
-			
 			if (timer % 1 == 0 && easePlayerToPoint == 100)
 			{
 				direction.easeT += 1 * easeChange;
@@ -178,6 +203,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			point.movePos.x = point.pos.x;
 
 		}
+		else
+		{
+			anchor.prepos.x = anchor.pos.x;
+			anchor.prepos.y = anchor.pos.y;
+			direction.prepos.x = direction.pos.x;
+			direction.prepos.y = direction.pos.y;
+		}
 		if (player.move)
 		{
 			player.pos.x = player.movePos.x + easeInQuint(player.easeT / 100) * player.length.x;
@@ -190,6 +222,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 			else if (player.easeT >= 100)
 			{
+				player.velocity.x = (direction.prepos.x - anchor.prepos.x) / 10;
+				player.velocity.y = (direction.prepos.y - anchor.prepos.y) / 10;
+
+
 				player.move = false;
 				player.easeT = 0;
 				point.easeT = 0;
@@ -202,6 +238,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		}
+
+
+
+		if (player.pos.y > 900 - player.radius.y)
+		{
+			player.pos.y = 900 - player.radius.y;
+			player.velocity.y *= -e;
+		}
+
+
+		if (player.pos.y < 0 + player.radius.y)
+		{
+			player.pos.y = 0 + player.radius.y;
+			player.velocity.y *= -e;
+
+		}
+		if (player.pos.x < 0 + player.radius.x)
+		{
+			player.pos.x = 0 + player.radius.x;
+			player.velocity.x *= -e;
+
+		}
+		if (player.pos.x > 1920 - player.radius.x)
+		{
+			player.pos.x = 1920 - player.radius.x;
+			player.velocity.x *= -e;
+		}
+
+
 		timer++;
 		///                                                            ///
 		/// --------------------↑更新処理ここまで-------------------- ///
@@ -211,14 +276,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// --------------------↓描画処理ここから-------------------- ///
 		///                                                            ///
 
-		Novice::ScreenPrintf(100, 100, "anchor.easeT=%f", anchor.easeT);
+
+		Novice::ScreenPrintf(100, 80, "player.shot=%d,player.move=%d", player.shot, player.move);
+		Novice::ScreenPrintf(100, 100, "player.velocity.x=%0.2f,player.velocity.y=%0.2f,player.acceleration.x=%0.2f,player.acceleration.y=%0.2f,", player.velocity.x, player.velocity.y, player.acceleration.x, player.acceleration.y);
 		Novice::ScreenPrintf(100, 120, "point.pos.x=%0.1f,point.pos.y=%0.1f,point.easeT=%0.1f", point.pos.x, point.pos.y, point.easeT);
 		Novice::ScreenPrintf(100, 140, "direction.easeT=%f", direction.easeT);
 
 
+		Novice::DrawBox(0, 900, 1920, 1080, 0, 0x111111ff, kFillModeSolid);
 		Novice::DrawEllipse(int(player.pos.x), int(player.pos.y), int(player.radius.x), int(player.radius.y), 0, BLUE, kFillModeSolid);
 		Novice::DrawEllipse(int(point.pos.x), int(point.pos.y), int(point.radius.x), int(point.radius.y), 0, RED, kFillModeSolid);
-		if(!player.shot&&!player.move)		Novice::DrawEllipse(int(player.pos.x), int(player.pos.y), int(player.radius.x), int(player.radius.y), 0, 0xff00ffff, kFillModeSolid);
+		if (!player.shot && !player.move)Novice::DrawEllipse(int(player.pos.x), int(player.pos.y), int(player.radius.x), int(player.radius.y), 0, 0xff00ffff, kFillModeSolid);
 
 
 		Novice::DrawBox(int(player.pos.x), int(player.pos.y - 5), int(point.pos.x - player.pos.x), 10, 0, GREEN, kFillModeSolid);
@@ -234,9 +302,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//Novice::DrawEllipse(int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), 10, 10, 0, RED, kFillModeSolid);
 			//Novice::DrawLine(int(centorPoint.x), int(centorPoint.y), int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), RED);
 		}
-		Novice::DrawEllipse(int(anchor.pos.x), int(anchor.pos.y), int(anchor.radius.x), int(anchor.radius.y), 0, 0xff6666ff, kFillModeSolid);
-		Novice::DrawEllipse(int(anchor.pos.x + direction.pos.x), int(anchor.pos.y + direction.pos.y), 10, 10, 0, 0xff6666ff, kFillModeSolid);
-		Novice::DrawLine(int(anchor.pos.x), int(anchor.pos.y), int(anchor.pos.x + direction.pos.x), int(anchor.pos.y + direction.pos.y), 0xff6666ff);
+		if (player.shot || player.move)
+		{
+			Novice::DrawEllipse(int(anchor.pos.x), int(anchor.pos.y), int(anchor.radius.x), int(anchor.radius.y), 0, 0xff6666ff, kFillModeSolid);
+			Novice::DrawEllipse(int(direction.pos.x), int(direction.pos.y), 10, 10, 0, 0xff6666ff, kFillModeSolid);
+			Novice::DrawLine(int(anchor.pos.x), int(anchor.pos.y), int(direction.pos.x), int(direction.pos.y), 0xff6666ff);
+
+		}
 
 		///                                                            ///
 		/// --------------------↑描画処理ここまで-------------------- ///
