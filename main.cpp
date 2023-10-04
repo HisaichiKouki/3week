@@ -136,9 +136,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 
-		point.pos.y = player.pos.y;//赤玉のy軸をプレイヤーに合わせる
-		centorPoint.y = player.pos.y;//ゲージ真ん中のy軸をプレイヤーに合わせる
-		anchor.pos.y = player.pos.y;//ゲージ動く玉のy軸をプレイヤーに合わせる
 
 		if (direction.easeT < 50)
 		{
@@ -240,6 +237,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				player.easeT = 0;
 				point.easeT = 0;
 				anchor.easeT = 0;
+				
 				direction.easeT = 0;
 				easeChange = 1;
 				easePlayerToPoint = 0;
@@ -303,6 +301,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		}
 
+		point.pos.y = player.pos.y;//赤玉のy軸をプレイヤーに合わせる
+		centorPoint.y = player.pos.y;//ゲージ真ん中のy軸をプレイヤーに合わせる
+		anchor.pos.y = player.pos.y;//ゲージ動く玉のy軸をプレイヤーに合わせる
 
 		timer++;
 		///                                                            ///
@@ -346,7 +347,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//Novice::DrawEllipse(int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), 10, 10, 0, RED, kFillModeSolid);
 			//Novice::DrawLine(int(centorPoint.x), int(centorPoint.y), int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), RED);
 		}
-		if (player.shot || player.move)
+		if (player.shot || player.move )
 		{
 			//アンカーとポイントとそれを繋ぐ線
 			Novice::DrawEllipse(int(anchor.pos.x), int(anchor.pos.y), int(anchor.radius.x), int(anchor.radius.y), 0, 0xff6666ff, kFillModeSolid);
@@ -374,6 +375,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//y軸がバウンドして速度が-になっている時にスローを解除するとふっとぶ 解決　accとposのvelどちらもslowをかける
 
 		//どこかにバウンドするともう一度ジャンプ出来るようになる
+		
+		//ジャンプ後スペースを押し続けると、方向かアンカーの玉が一瞬、更新前の場所に表示される
 
 		// フレームの終了
 		Novice::EndFrame();
