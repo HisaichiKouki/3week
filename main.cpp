@@ -79,14 +79,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Vector2 centorPoint = { player.pos.x,player.pos.y };//ゲージ真ん中の場所
 
-	float playerTopoint = 300;//playerからpointまで　pointは壁を貫通
+	float playerTopoint = 500;//playerからpointまで　pointは壁を貫通
 
 	float shotPower = 300;//ショットパワー　見た目だけこのサイズで、計算するときは/10してる
 
 	float easePlayerToPoint = 0;//最初に赤玉を発射する
 
-	player.acceleration.y = 0.5f;//重力
-	float e = 0.7f;//反発係数
+	player.acceleration.y = 0.4f;//重力
+	float ex = 0.7f;//反発係数x
+	float ey = 0.3f;//反発係数x
 
 	float moveAcceleration = 1;//x軸方向のベクトルが徐々に遅くなる
 
@@ -113,7 +114,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///                                                            ///
 
 
-		if (keys[DIK_SPACE]&&jumpF)
+		if (keys[DIK_SPACE] && jumpF)
 		{
 			if (!player.move)player.shot = true;
 		}
@@ -129,7 +130,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				player.shot = false;
 			}
 
-			if (!player.move&&!player.shot)
+			if (!player.move && !player.shot)
 			{
 				point.pos.x = player.pos.x;
 			}
@@ -146,7 +147,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		}
 		else
-		{	
+		{
 			//　上から右下の動き
 			direction.pos.x = anchor.pos.x + constant(direction.easeT / 50 - 1) * shotPower;
 			direction.pos.y = player.pos.y + constant(direction.easeT / 50 - 1) * shotPower - shotPower;
@@ -178,8 +179,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//アンカーと方向のeaseT　maxとminで折り返す
 			if (timer % 1 == 0 && easePlayerToPoint == 100)
 			{
-				direction.easeT += 1 * easeChange;
-				anchor.easeT += 1 * easeChange;
+				direction.easeT += 1.2f * easeChange;
+				anchor.easeT += 1.2f * easeChange;
 
 			}
 			if (anchor.easeT > 100)
@@ -220,8 +221,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//アンカーに向かってくる動きのeaseT
 			if (player.easeT < 100)
 			{
-				player.easeT += 2;
-				point.easeT += 2;
+				player.easeT += 3;
+				point.easeT += 3;
+
+				if (player.easeT > 100)
+				{
+					player.easeT = 100;
+					point.easeT = 100;
+				}
 			}
 			else if (player.easeT >= 100)
 			{
@@ -237,7 +244,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				player.easeT = 0;
 				point.easeT = 0;
 				anchor.easeT = 0;
-				
+
 				direction.easeT = 0;
 				easeChange = 1;
 				easePlayerToPoint = 0;
@@ -248,9 +255,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		}
 
-		if (keys[DIK_SPACE] && jumpF)
+		if (player.shot || player.move)
 		{
-			slow = 0.5f;
+			if (jumpF)slow = 0.0f;
 		}
 		else
 		{
@@ -260,10 +267,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		player.pos.x += player.velocity.x * moveAcceleration * slow;//プレイヤーの位置を変更
 		player.velocity.y += player.acceleration.y * slow;//プレイヤーの速度を計算
 		player.pos.y += player.velocity.y * slow;//プレイヤーの位置を変更
-		
+
 
 		//player.velocity.xを徐々に小さくしていく
-		if (moveAcceleration>0)
+		if (moveAcceleration > 0)
 		{
 			moveAcceleration -= 0.003f;
 		}
@@ -277,26 +284,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (player.pos.y > 900 - player.radius.y)
 		{
 			player.pos.y = 900 - player.radius.y;
-			player.velocity.y *= -e;
+			player.velocity.y *= -ey;
+			player.velocity.x *= ex;
 			jumpF = true;
 		}
 		if (player.pos.y < 0 + player.radius.y)
 		{
 			player.pos.y = 0 + player.radius.y;
-			player.velocity.y *= -e;
+			player.velocity.y *= -ey;
+
 			jumpF = true;
 		}
 		if (player.pos.x < 0 + player.radius.x)
 		{
 			player.pos.x = 0 + player.radius.x;
-			player.velocity.x *= -e;
+			player.velocity.x *= -ex;
 			jumpF = true;
 
 		}
 		if (player.pos.x > 1920 - player.radius.x)
 		{
 			player.pos.x = 1920 - player.radius.x;
-			player.velocity.x *= -e;
+			player.velocity.x *= -ex;
 			jumpF = true;
 
 		}
@@ -324,6 +333,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//地形
 		Novice::DrawBox(0, 900, 1920, 1080, 0, 0x111111ff, kFillModeSolid);
+		Novice::DrawBox(300, 600, 500, 150, 0, 0x111111ff, kFillModeSolid);
+		Novice::DrawTriangle(200, 600, 300, 600, 300, 600 + 150, 0x111111ff, kFillModeSolid);
 		//プレイヤー
 		Novice::DrawEllipse(int(player.pos.x), int(player.pos.y), int(player.radius.x), int(player.radius.y), 0, BLUE, kFillModeSolid);
 		//ポイント
@@ -347,7 +358,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//Novice::DrawEllipse(int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), 10, 10, 0, RED, kFillModeSolid);
 			//Novice::DrawLine(int(centorPoint.x), int(centorPoint.y), int(centorPoint.x + direction.pos.x), int(centorPoint.y + direction.pos.y), RED);
 		}
-		if (player.shot || player.move )
+		if (player.shot || player.move)
 		{
 			//アンカーとポイントとそれを繋ぐ線
 			Novice::DrawEllipse(int(anchor.pos.x), int(anchor.pos.y), int(anchor.radius.x), int(anchor.radius.y), 0, 0xff6666ff, kFillModeSolid);
@@ -375,7 +386,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//y軸がバウンドして速度が-になっている時にスローを解除するとふっとぶ 解決　accとposのvelどちらもslowをかける
 
 		//どこかにバウンドするともう一度ジャンプ出来るようになる
-		
+
 		//ジャンプ後スペースを押し続けると、方向かアンカーの玉が一瞬、更新前の場所に表示される
 
 		// フレームの終了
