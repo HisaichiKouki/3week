@@ -18,6 +18,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{
 		float x;
 		float y;
+		float z;
 	};
 
 	struct Player
