@@ -257,7 +257,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		if (player.shot || player.move)
 		{
-			if (jumpF)slow = 0.0f;
+			if (jumpF)slow = 0.1f;
 		}
 		else
 		{
