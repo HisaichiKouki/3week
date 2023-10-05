@@ -335,7 +335,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//地形
 		Novice::DrawBox(0, 900, 1920, 1080, 0, 0x111111ff, kFillModeSolid);
 		Novice::DrawBox(300, 600, 500, 150, 0, 0x111111ff, kFillModeSolid);
-		Novice::DrawTriangle(200, 600, 300, 600, 300, 600 + 150, 0x111111ff, kFillModeSolid);
+
+		// 三角形　(ワイヤー化済み)
+		Novice::DrawTriangle(200, 600, 300, 600, 300, 600 + 150, 0x111111ff, kFillModeWireFrame);
 		//プレイヤー
 		Novice::DrawEllipse(int(player.pos.x), int(player.pos.y), int(player.radius.x), int(player.radius.y), 0, BLUE, kFillModeSolid);
 		//ポイント
