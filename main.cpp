@@ -355,6 +355,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Novice::DrawLine(int(anchor.pos.x), int(anchor.pos.y), int(direction.pos.x), int(direction.pos.y), 0xff6666ff);
 
 		}
+		Novice::ScreenPrintf(0, 0, "hello");
 
 		///                                                            ///
 		/// --------------------↑描画処理ここまで-------------------- ///
